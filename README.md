@@ -37,9 +37,6 @@ This repository provides a comprehensive solution for detecting and localizing i
      ```bash
      pip install -r requirements.txt
      ```
-   - Additional requirements:
-     - `ultralytics`, `opencv-python`, `flask`, `tensorflow`, `Pillow`, `matplotlib`, `numpy`
-
 3. **Download/Place Models**
    - The ELA-CNN model file (`model1.h5`) is **not included** in this repository due to its large size (1.5 GB).  
      You can download it from [this Google Drive link](https://drive.google.com/file/d/17x9k8YKdSVZ3p6J3na21L1SEbnjHWzYp/view?usp=drive_link) and place it in the `Demo Website` directory.
