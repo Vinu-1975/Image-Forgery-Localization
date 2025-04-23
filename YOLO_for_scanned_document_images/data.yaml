@@ -1,0 +1,11 @@
+train: D:/ML-PROJECTS/Forgery2/train/images
+val: D:/ML-PROJECTS/Forgery2/valid/images
+nc: 1
+names: ['Forgery']
+
+# roboflow:
+#   workspace: document-forgery-detection
+#   project: document-forgery-detection
+#   version: 48
+#   license: CC BY 4.0
+#   url: https://universe.roboflow.com/document-forgery-detection/document-forgery-detection/dataset/48

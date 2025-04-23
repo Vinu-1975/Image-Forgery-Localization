@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>General Image Forgery Detection</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+      :root {
+        --primary-color: #6a11cb;
+        --secondary-color: #2575fc;
+        --accent-color: #ff7e5f;
+        --light-color: #f8f9fa;
+        --dark-color: #343a40;
+        --success-color: #28a745;
+        --border-radius: 10px;
+        --box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        --transition: all 0.3s ease;
+        --heading-font: 'Montserrat', sans-serif;
+        --body-font: 'Poppins', sans-serif;
+        --code-font: 'Roboto', monospace;
+      }
+      
+      body {
+        background-color: var(--light-color);
+        font-family: var(--body-font);
+        font-weight: 400;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+      
+      h1, h2, h3, h4, h5, h6, .display-4, .display-5, .display-6 {
+        font-family: var(--heading-font);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      
+      .lead {
+        font-family: var(--body-font);
+        font-weight: 300;
+        letter-spacing: 0.01em;
+      }
+      
+      .btn {
+        font-family: var(--heading-font);
+        font-weight: 500;
+        letter-spacing: 0.03em;
+      }
+      
+      .header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 var(--border-radius) var(--border-radius);
+        box-shadow: var(--box-shadow);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+        animation: pulse 15s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.05); opacity: 0.5; }
+        100% { transform: scale(1); opacity: 0.3; }
+      }
+      
+      .upload-container {
+        background-color: white;
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+        transition: var(--transition);
+        border-top: 4px solid var(--primary-color);
+      }
+      
+      .upload-container:hover {
+        transform: translateY(-5px);
+      }
+      
+      .results-container {
+        background-color: white;
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        border-top: 4px solid var(--success-color);
+      }
+      
+      .custom-file-upload {
+        border: 2px dashed #ddd;
+        border-radius: var(--border-radius);
+        padding: 3.5rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: var(--transition);
+        background-color: rgba(106, 17, 203, 0.02);
+      }
+      
+      .custom-file-upload:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(106, 17, 203, 0.05);
+        transform: scale(1.01);
+      }
+      
+      .custom-file-upload i {
+        font-size: 3.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        transition: var(--transition);
+      }
+      
+      .custom-file-upload:hover i {
+        transform: translateY(-5px);
+      }
+      
+      .result-image {
+        max-width: 100%;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+      }
+      
+      .result-image:hover {
+        transform: scale(1.02);
+      }
+      
+      .footer {
+        margin-top: 4rem;
+        padding: 2rem 0;
+        background-color: var(--dark-color);
+        color: white;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+      }
+      
+      #file-name {
+        margin-top: 15px;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+      
+      .back-btn {
+        margin-top: 1.5rem;
+      }
+      
+      .btn-primary {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border: none;
+        box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4);
+        transition: var(--transition);
+      }
+      
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(106, 17, 203, 0.6);
+      }
+      
+      .btn-info {
+        background: linear-gradient(to right, #36d1dc, #5b86e5);
+        border: none;
+        box-shadow: 0 4px 15px rgba(54, 209, 220, 0.4);
+        transition: var(--transition);
+      }
+      
+      .btn-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(54, 209, 220, 0.6);
+      }
+      
+      .btn-outline-secondary {
+        border: 2px solid var(--dark-color);
+        transition: var(--transition);
+      }
+      
+      .btn-outline-secondary:hover {
+        background-color: var(--dark-color);
+        transform: translateY(-2px);
+      }
+      
+      .list-group-item {
+        transition: var(--transition);
+        border-left: 0;
+        border-right: 0;
+      }
+      
+      .list-group-item:hover {
+        background-color: rgba(106, 17, 203, 0.05);
+        transform: translateX(5px);
+      }
+      
+      .modal-content {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+      }
+      
+      .modal-header {
+        background: linear-gradient(to right, #36d1dc, #5b86e5);
+        color: white;
+        border-bottom: none;
+      }
+      
+      .card {
+        border: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: var(--transition);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+      }
+      
+      .card:hover {
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+      }
+      
+      .card-body {
+        padding: 1.5rem;
+      }
+      
+      /* Loading animation */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        visibility: hidden;
+        opacity: 0;
+        transition: var(--transition);
+      }
+      
+      .loading-overlay.active {
+        visibility: visible;
+        opacity: 1;
+      }
+      
+      .loading-spinner {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 8px solid rgba(106, 17, 203, 0.1);
+        border-top: 8px solid var(--primary-color);
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Image comparison slider */
+      .comparison-slider {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+      }
+      
+      /* Tooltip styling */
+      .custom-tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: help;
+      }
+      
+      .custom-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 200px;
+        background-color: var(--dark-color);
+        color: white;
+        text-align: center;
+        border-radius: 6px;
+        padding: 10px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      
+      .custom-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+      }
+      
+      /* Removing dark mode styles */
+      
+      .navbar {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        box-shadow: var(--box-shadow);
+        padding: 1rem 0;
+      }
+      
+      .navbar-brand {
+        font-family: var(--heading-font);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+      
+      .nav-link {
+        font-family: var(--heading-font);
+        font-weight: 500;
+        transition: var(--transition);
+      }
+      
+      .nav-link:hover {
+        transform: translateY(-2px);
+      }
+
+      /* Publication modal styles */
+          .author-card {
+            transition: all 0.3s ease;
+            background-color: #fff;
+          }
+          
+          .author-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+          }
+          
+          .text-truncate {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+          }
+          
+          /* Responsive button layout */
+          @media (max-width: 768px) {
+            .btn-lg {
+              padding-left: 1.5rem !important;
+              padding-right: 1.5rem !important;
+              font-size: 0.9rem;
+            }
+          }
+      
+      /* Removing theme switch styles */
+    </style>
+  </head>
+  <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Updated navbar to match document.html -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          <i class="fas fa-shield-alt me-2"></i>Forgery Localization
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i> Home
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="{{ url_for('general') }}">
+                <i class="fas fa-image me-1"></i> General Image
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('document') }}">
+                <i class="fas fa-file-alt me-1"></i> Document Image
+              </a>
+            </li>
+            <!-- Removed dark mode toggle -->
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="header text-center">
+      <div class="container">
+        <h1 class="display-4 fw-bold" data-aos="fade-down">General Image Forgery Detection</h1>
+        <p class="lead" data-aos="fade-up" data-aos-delay="200">Upload an image to detect potential manipulations using advanced AI techniques</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="upload-container" data-aos="fade-up" data-aos-delay="300">
+            <h2 class="text-center mb-4">Upload Image</h2>
+            <form action="{{ url_for('general') }}" method="post" enctype="multipart/form-data" id="upload-form">
+              <div class="mb-4">
+                <label for="image-upload" class="custom-file-upload d-block">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <h4>Drag & Drop or Click to Upload</h4>
+                  <p class="text-muted">Supported formats: JPG, PNG, JPEG</p>
+                  <div id="file-name"></div>
+                </label>
+                <input type="file" name="image" id="image-upload" accept="image/*" required style="display: none;">
+              </div>
+              <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5 mb-2 me-2" id="analyzeBtn">
+                  <i class="fas fa-search me-2"></i>Analyze Image
+                </button>
+                <button type="button" class="btn btn-info btn-lg px-5 ms-2 mb-2" data-bs-toggle="modal" data-bs-target="#modelInfoModal">
+                  <i class="fas fa-info-circle me-2"></i>Model Details
+                </button>
+                <button type="button" class="btn btn-success btn-lg px-5 mb-2" data-bs-toggle="modal" data-bs-target="#publicationModal">
+                  <i class="fas fa-award me-2"></i>Publication Details
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {% if result_image %}
+          <div class="results-container" data-aos="fade-up">
+            <h2 class="text-center mb-4">Analysis Results</h2>
+            <div class="text-center mb-4">
+              <img src="data:image/png;base64,{{ result_image }}" alt="Result" class="result-image">
+            </div>
+            <div class="mt-4">
+              <h4 class="d-flex align-items-center">
+                Interpretation
+                <span class="custom-tooltip ms-2">
+                  <i class="fas fa-question-circle text-primary"></i>
+                  <span class="tooltip-text">How to read the results</span>
+                </span>
+              </h4>
+              <div class="card mb-3">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                      <div class="d-flex flex-column align-items-center">
+                        <i class="fas fa-image fa-2x mb-2 text-primary"></i>
+                        <h5>Original Image</h5>
+                        <p class="text-muted small">The input image you uploaded</p>
+                      </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                      <div class="d-flex flex-column align-items-center">
+                        <i class="fas fa-compress-alt fa-2x mb-2 text-info"></i>
+                        <h5>ELA</h5>
+                        <p class="text-muted small">Error Level Analysis shows compression artifacts</p>
+                      </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                      <div class="d-flex flex-column align-items-center">
+                        <i class="fas fa-map fa-2x mb-2 text-success"></i>
+                        <h5>Prediction</h5>
+                        <p class="text-muted small">Brighter areas indicate potential manipulations</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="card">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0">Detailed Analysis</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item">
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                      <div>
+                        <strong>Original Image:</strong> The input image you uploaded
+                        <div class="text-muted small">Used as the primary input for the detection model</div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-chart-bar text-info me-3 fa-lg"></i>
+                      <div>
+                        <strong>ELA (Error Level Analysis):</strong> Shows compression artifacts that may indicate manipulation
+                        <div class="text-muted small">Different compression levels in manipulated areas create visible patterns</div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-bullseye text-primary me-3 fa-lg"></i>
+                      <div>
+                        <strong>Prediction:</strong> Brighter areas indicate potential manipulated regions
+                        <div class="text-muted small">The AI model highlights areas with high probability of manipulation</div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          
+          <div class="text-center back-btn" data-aos="fade-up">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+              <i class="fas fa-arrow-left me-2"></i>Back to Home
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Information Modal -->
+    <div class="modal fade" id="modelInfoModal" tabindex="-1" aria-labelledby="modelInfoModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modelInfoModalLabel">
+              <i class="fas fa-brain me-2"></i>Image Forgery Detection Model Details
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="row mb-4">
+                <div class="col-12">
+                  <!-- Preprocessing Steps Section - Moved before architecture -->
+                  <h4 class="d-flex align-items-center mb-3">
+                    <i class="fas fa-cogs me-2 text-primary"></i>
+                    Preprocessing Pipeline
+                  </h4>
+                  <div class="card mb-4">
+                    <div class="card-body">
+                      <p>Before feeding images to the model, several preprocessing steps are applied:</p>
+                      
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">1</span>
+                            <div>
+                              <strong>Resizing:</strong> All images are resized to 128×128 pixels
+                              <div class="text-muted small">
+                                <code>image_resized = image.resize(target_size)</code> - Ensures consistent input dimensions for the neural network
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">2</span>
+                            <div>
+                              <strong>Normalization:</strong> Pixel values scaled to range [0,1]
+                              <div class="text-muted small">
+                                <code>np.array(image_resized) / 255.0</code> - Improves training stability and convergence
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">3</span>
+                            <div>
+                              <strong>Error Level Analysis (ELA):</strong> JPEG compression artifacts analysis
+                              <div class="text-muted small">
+                                Process: 
+                                <ol class="mb-0">
+                                  <li>Save image at quality level 90</li>
+                                  <li>Compute difference between original and compressed</li>
+                                  <li>Scale differences to enhance visibility</li>
+                                  <li>Normalize the ELA image</li>
+                                </ol>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">4</span>
+                            <div>
+                              <strong>Dual Input Preparation:</strong> Creating model inputs
+                              <div class="text-muted small">
+                                <code>x1_input = np.expand_dims(x1, axis=0)</code> - Original image branch<br>
+                                <code>x2_input = np.expand_dims(x2, axis=0)</code> - ELA image branch
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                      
+                      <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Technical Note:</strong> The ELA technique highlights inconsistencies in compression levels by comparing an image against its re-compressed version. Areas that have been manipulated often show different error levels.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Model Architecture Section - Now after preprocessing -->
+                  <h4 class="d-flex align-items-center">
+                    <i class="fas fa-network-wired me-2 text-primary"></i>
+                    Model Architecture
+                  </h4>
+                  <div class="card">
+                    <div class="card-body">
+                      <p>This application uses a dual-input convolutional neural network (CNN) designed specifically for image forgery detection:</p>
+                      
+                      <!-- Architecture Diagram Section -->
+                      <div class="text-center mb-3">
+                        <img src="{{ url_for('static', filename='images/architecture_diagram.jpg') }}" 
+                             alt="Model Architecture Diagram" 
+                             class="img-fluid rounded" 
+                             style="max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s ease;"
+                             onmouseover="this.style.transform='scale(1.02)'" 
+                             onmouseout="this.style.transform='scale(1)'">
+                        <p class="text-muted mt-2">Architecture diagram of the dual-input CNN model</p>
+                      </div>
+                      
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">1</span>
+                            <div>
+                              <strong>Architecture Type:</strong> Two-branch CNN with shared weights
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">2</span>
+                            <div>
+                              <strong>Input Branches:</strong> Original RGB image and Error Level Analysis (ELA) image
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">3</span>
+                            <div>
+                              <strong>Output:</strong> Pixel-wise forgery probability map (128×128)
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item">
+                          <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">4</span>
+                            <div>
+                              <strong>Loss Function:</strong> Mean Squared Error (MSE)
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Remove the duplicate preprocessing section that was at the end -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    
+    <!-- Publication Details Modal -->
+        <div class="modal fade" id="publicationModal" tabindex="-1" aria-labelledby="publicationModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="publicationModalLabel">
+                  <i class="fas fa-award me-2"></i>Research Publication Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="container-fluid">
+                  <!-- Publication Title and Journal -->
+                  <div class="card mb-4">
+                    <div class="card-header bg-light">
+                      <h4 class="mb-0">Dual-Branch CNN for Image Forgery Localization</h4>
+                    </div>
+                    <div class="card-body">
+                      <p class="lead">Published in the 3rd International Conference on Power Engineering and Intelligent Systems (PEIS) Organized by National Institute of Technology, Uttarakhand, India</p>
+                      <!-- <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-primary me-2">DOI: 10.14569/IJACSA.2023.0140587</span>
+                        <span class="badge bg-success me-2">Impact Factor: 2.1</span>
+                        <span class="badge bg-info">Peer-Reviewed</span>
+                      </div> -->
+                      <p>This research presents a novel approach to image forgery detection using a dual-branch convolutional neural network that processes both the original image and its Error Level Analysis (ELA) representation.</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Authors Section -->
+                  <h4 class="d-flex align-items-center mb-3">
+                    <i class="fas fa-users me-2 text-primary"></i>
+                    Authors
+                  </h4>
+                  <div class="card mb-4">
+                    <div class="card-body">
+                      <!-- Principal Investigator - Full width -->
+                      <div class="author-card mb-4 p-3 border-start border-primary border-4 rounded shadow-sm">
+                        <div class="d-flex align-items-center">
+                          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user-tie fa-lg"></i>
+                          </div>
+                          <div>
+                            <h5 class="mb-1">Dr. Aarthi R</h5>
+                            <div>
+                              <a href="mailto:r_aarthi@cb.amrita.edu" class="text-decoration-none d-flex align-items-center">
+                                <i class="fas fa-envelope me-2"></i>r_aarthi@cb.amrita.edu
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Student Authors - Grid layout with cards -->
+                      <h6 class="text-muted mb-3">Student Researchers</h6>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <div class="author-card h-100 p-3 border rounded shadow-sm">
+                            <h5 class="mb-1">Cheruvu Sahithee Vaibhav</h5>
+                            <div class="d-flex align-items-center">
+                              <i class="fas fa-envelope text-secondary me-2"></i>
+                              <a href="mailto:cb.en.u4cse21414@cb.students.amrita.edu" 
+                                 class="text-truncate" 
+                                 title="cb.en.u4cse21414@cb.students.amrita.edu">
+                                cb.en.u4cse21414@cb.students.amrita.edu
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                          <div class="author-card h-100 p-3 border rounded shadow-sm">
+                            <h5 class="mb-1">Ujwal Srimanth Varma N</h5>
+                            <div class="d-flex align-items-center">
+                              <i class="fas fa-envelope text-secondary me-2"></i>
+                              <a href="mailto:cb.en.u4cse21440@cb.students.amrita.edu" 
+                                 class="text-truncate" 
+                                 title="cb.en.u4cse21440@cb.students.amrita.edu">
+                                cb.en.u4cse21440@cb.students.amrita.edu
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                          <div class="author-card h-100 p-3 border rounded shadow-sm">
+                            <h5 class="mb-1">Mahammed Khaji Sami</h5>
+                            <div class="d-flex align-items-center">
+                              <i class="fas fa-envelope text-secondary me-2"></i>
+                              <a href="mailto:cb.en.u4cse21430@cb.students.amrita.edu" 
+                                 class="text-truncate" 
+                                 title="cb.en.u4cse21430@cb.students.amrita.edu">
+                                cb.en.u4cse21430@cb.students.amrita.edu
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                          <div class="author-card h-100 p-3 border rounded shadow-sm">
+                            <h5 class="mb-1">Vinayakan V S</h5>
+                            <div class="d-flex align-items-center">
+                              <i class="fas fa-envelope text-secondary me-2"></i>
+                              <a href="mailto:cb.en.u4cse21467@cb.students.amrita.edu" 
+                                 class="text-truncate" 
+                                 title="cb.en.u4cse21467@cb.students.amrita.edu">
+                                cb.en.u4cse21467@cb.students.amrita.edu
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Publication Certificate -->
+                  <h4 class="d-flex align-items-center mb-3">
+                    <i class="fas fa-certificate me-2 text-primary"></i>
+                    Publication Certificate
+                  </h4>
+                  <div class="card mb-4">
+                    <div class="card-body text-center">
+                      <img src="{{ url_for('static', filename='images/publication_certificate.jpg') }}" 
+                           alt="Publication Certificate" 
+                           class="img-fluid rounded" 
+                           style="max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s ease;"
+                           onmouseover="this.style.transform='scale(1.02)'" 
+                           onmouseout="this.style.transform='scale(1)'">
+                      
+                      <!-- Fallback message if certificate image doesn't load -->
+                      <div class="alert alert-info mt-3" id="certificateLoadError" style="display: none;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        The publication certificate image could not be loaded. Please ensure the image exists at 
+                        <code>static/images/publication_certificate.jpg</code>
+                      </div>
+                      
+                      <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                          const img = document.querySelector('img[alt="Publication Certificate"]');
+                          img.onerror = function() {
+                            document.getElementById('certificateLoadError').style.display = 'block';
+                            this.style.display = 'none';
+                          };
+                        });
+                      </script>
+                    </div>
+                  </div>
+                  
+                  <!-- Abstract Section -->
+                  <!-- <h4 class="d-flex align-items-center mb-3">
+                    <i class="fas fa-file-alt me-2 text-primary"></i>
+                    Abstract
+                  </h4>
+                  <div class="card">
+                    <div class="card-body">
+                      <p>Image forgery detection has become increasingly important in the digital age where image manipulation is accessible to everyone. This paper presents a novel dual-branch convolutional neural network approach that leverages both the original image and its Error Level Analysis (ELA) representation to detect and localize image forgeries with high precision.</p>
+                      
+                      <p>Our method achieves state-of-the-art results on the CASIA v2.0 dataset, demonstrating superior performance in detecting various types of image manipulations including copy-move, splicing, and removal forgeries. The proposed architecture generates a pixel-wise forgery probability map that accurately highlights manipulated regions in the image.</p>
+                      
+                      <p>Experimental results show that our approach outperforms existing methods by 8.5% in terms of F1-score and 7.2% in localization accuracy, making it a valuable tool for digital forensics and media authentication.</p>
+                    </div>
+                  </div> -->
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" target="_blank">
+                  <i class="fas fa-external-link-alt me-2"></i>View Full Paper
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+    <footer class="footer text-center">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <h5>About</h5>
+            <p class="small">Image Forgery Localization Project uses advanced AI to detect manipulated regions in images</p>
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <h5>Links</h5>
+            <ul class="list-unstyled">
+              <li><a href="{{ url_for('index') }}" class="text-white">Home</a></li>
+              <li><a href="#" class="text-white">Documentation</a></li>
+              <li><a href="#" class="text-white">GitHub</a></li>
+            </ul>
+          </div>
+          <div class="col-md-4">
+            <h5>Contact</h5>
+            <p class="small">For questions or feedback, please contact us at info@forgerydetection.ai</p>
+          </div>
+        </div>
+        <hr class="my-4" style="background-color: rgba(255,255,255,0.2)">
+        <p>© 2025 Image Forgery Localization Project</p>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initialize AOS animations
+        AOS.init({
+          duration: 800,
+          easing: 'ease-in-out',
+          once: true
+        });
+        
+        // File upload preview
+        const fileInput = document.getElementById('image-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const uploadForm = document.getElementById('upload-form');
+        
+        if (fileInput) {
+          fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+              fileNameDisplay.textContent = this.files[0].name;
+            }
+          });
+        }
+        
+        if (uploadForm) {
+          uploadForm.addEventListener('submit', function() {
+            loadingOverlay.classList.add('active');
+          });
+        }
+        
+        // Removed dark mode toggle functionality
+      });
+    </script>
+  </body>
+</html>
