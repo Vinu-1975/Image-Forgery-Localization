@@ -1,5 +1,7 @@
 # Image Forgery Localization
 
+[![Watch the demo video](https://img.shields.io/badge/YouTube-Demo%20Video-red?logo=youtube)](https://youtu.be/quLxV1YYVh8)
+
 This repository provides a comprehensive solution for detecting and localizing image forgeries, with a special focus on scanned document images. It combines two main approaches:
 
 - **General Image Forgery Detection using ELA-CNN**: Uses Error Level Analysis (ELA) and a Convolutional Neural Network to localize manipulated regions in general images.
